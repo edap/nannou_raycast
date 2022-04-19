@@ -1,5 +1,5 @@
 [package]
-name = "nannou_ray2d"
+name = "nannou-ray2d"
 authors = ["Davide Prati <lastexxit@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
