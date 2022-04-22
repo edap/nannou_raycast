@@ -22,14 +22,11 @@ impl Default for Ray2D {
     }
 }
 
-// TODO, all this methods should accept both f32 and f64
-// https://docs.rs/num-traits/latest/num_traits/float/trait.Float.html
-
 impl Ray2D {
     pub fn new(orig: Vec2, dir: Vec2) -> Self {
-        Self{
+        Self {
             orig,
-            dir,
+            dir: dir.normalize(),
         }
     }
 
@@ -64,16 +61,16 @@ impl Ray2D {
     // in case of material like glass, that are both refractive and reflective, fresnel equation find out how much
     // light is refracted and how much light is reflected
     // reference https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
-    pub fn fresnel(&self, surface_normal: Vec2, ior: f32) -> f64 {
-        let i_dot_n = self.dir.dot(surface_normal) as f64;
+    pub fn fresnel(&self, surface_normal: Vec2, ior: f32) -> f32 {
+        let i_dot_n = self.dir.dot(surface_normal) as f32;
         let mut eta_i = 1.0;
-        let mut eta_t = ior as f64;
+        let mut eta_t = ior;
         if i_dot_n > 0.0 {
             eta_i = eta_t;
             eta_t = 1.0;
         }
 
-        let sin_t = eta_i / eta_t * (1.0_f64 - i_dot_n * i_dot_n).max(0.0).sqrt();
+        let sin_t = eta_i / eta_t * (1.0 - i_dot_n * i_dot_n).max(0.0).sqrt();
         if sin_t > 1.0 {
             //Total internal reflection
             1.0
@@ -86,7 +83,6 @@ impl Ray2D {
         }
     }
 
-    // actually, removing this method could remove the nannou dependency
     pub fn draw(&self, draw: &Draw, mag: f32, weight: f32, col: Rgb) {
         draw.arrow()
             .color(col)
@@ -216,33 +212,74 @@ impl Ray2D {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const IOR_GLASS: f32 = 1.500;
+    const IOR_GOLD: f32 = 0.470;
+    const IOR_DIAMOND: f32 = 2.418;
+
     #[test]
-    fn it_takes_parameter_for_initialization() {
+    fn take_parametesrs_for_initialization() {
         let r = Ray2D::new(vec2(2.0, 0.0), vec2(0.0, 1.0));
         assert_eq!(r.dir, vec2(0.0, 1.0));
         assert_eq!(r.orig, vec2(2.0, 0.0));
     }
 
     #[test]
-    fn it_has_a_default_direction() {
+    fn have_a_default_direction() {
         let r = Ray2D::default();
         assert_eq!(r.dir, vec2(1.0, 0.0));
     }
 
     #[test]
-    #[ignore]
-    fn it_get_the_reflection_vector() {}
+    fn rotate_the_vector_towards_the_look_at_point() {
+        let mut r = Ray2D::default();
+        r.look_at(-1.0, -1.0);
+        assert_eq!(r.dir, vec2(-0.70710677, -0.70710677));
+    }
 
     #[test]
-    #[ignore]
-    fn it_get_the_refraction_vector() {}
+    fn calculate_the_refraction_vector_for_different_ior_coeficient() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let intersection = ray.intersect_circle(&vec2(2.0, 1.7), &1.0).unwrap();
+        // GLASS
+        assert_eq!(
+            ray.refract(intersection.1, IOR_GLASS),
+            vec2(0.72593915, 0.687759)
+        );
+        // GOLD
+        assert_eq!(
+            ray.refract(intersection.1, IOR_GOLD),
+            vec2(0.63922864, 0.76901674)
+        );
+        // DIAMOND
+        assert_eq!(
+            ray.refract(intersection.1, IOR_DIAMOND),
+            vec2(0.7398675, 0.6727526)
+        );
+    }
 
     #[test]
-    #[ignore]
-    fn it_calculate_the_fresnel_coeficient() {}
+    fn calculate_the_reflection_vector() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let intersection = ray.intersect_circle(&vec2(2.0, 2.0), &1.0).unwrap();
+
+        assert_eq!(ray.reflect(intersection.1), vec2(-0.70710677, -0.70710677));
+    }
 
     #[test]
-    fn in_case_of_an_intersection_with_a_segment_it_return_the_distance_to_it() {
+    fn calculate_the_fresnel_coeficient_for_different_ior_coeficient() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let intersection = ray.intersect_circle(&vec2(2.0, 1.7), &1.0).unwrap();
+        // GLASS
+        assert_eq!(ray.fresnel(intersection.1, IOR_GLASS), 0.040000003);
+        // GOLD
+        assert_eq!(ray.fresnel(intersection.1, IOR_GOLD), 0.12999213);
+        // DIAMOND
+        assert_eq!(ray.fresnel(intersection.1, IOR_DIAMOND), 0.17211089);
+    }
+
+    #[test]
+    fn calculate_the_intersection_with_a_segment() {
         let mut r = Ray2D::default();
         r.dir = vec2(0.0, 1.0);
         let start_segment = vec2(-1.0, 2.0);
@@ -257,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn when_there_isnt_an_intersection_with_a_segment_it_return_none() {
+    fn return_none_if_there_isnt_an_intersection_with_a_segment() {
         let mut r = Ray2D::default();
         r.dir = vec2(0.0, -1.0);
         let start_segment = vec2(-1.0, 2.0);
@@ -269,5 +306,89 @@ mod tests {
             &end_segment.y,
         );
         assert_eq!(distance_to_intersection, None);
+    }
+
+    #[test]
+    fn calculate_the_intersection_with_a_circle() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let intersection = ray.intersect_circle(&vec2(2.0, 2.0), &1.0);
+        assert_eq!(
+            intersection.unwrap(),
+            (1.8284273, vec2(-0.70710677, -0.70710677))
+        )
+    }
+
+    #[test]
+    fn return_none_if_there_is_no_intersection_with_a_circle() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(0.0, 1.0));
+        let intersection = ray.intersect_circle(&vec2(1.0, 1.0), &0.5);
+        assert_eq!(intersection, None)
+    }
+
+    // #[test]
+    // fn calculate_the_intersection_with_a_polyline() {
+    //     let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+    //     let radius = 150.0;
+    //     let points = (0..=180).map(|i| {
+    //         let radian = deg_to_rad(i as f32);
+    //         let x = radian.sin() * radius;
+    //         let y = radian.cos() * radius;
+    //         vec2(x,y)
+    //     }).collect();
+    //     let intersection = ray.intersect_polyline(&points);
+    //     assert_eq!(
+    //         intersection.unwrap(),
+    //         (1.8284273, vec2(-0.70710677, -0.70710677))
+    //     )
+    // }
+
+    // #[test]
+    // fn return_none_if_there_is_no_intersection_with_a_polyline() {
+    //     let ray = Ray2D::new(vec2(0.0, 0.0), vec2(0.0, 1.0));
+    //     let intersection = ray.intersect_circle(&vec2(1.0, 1.0), &0.5);
+    //     assert_eq!(intersection, None)
+    // }
+
+    #[test]
+    fn calculate_the_intersection_with_a_bounding_volume_circle() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let bv = BoundingVolume::Circle {
+            position: vec2(2.0, 2.0),
+            radius: 1.0,
+        };
+        let intersection = ray.intersect_bounding_volume(&bv);
+        assert_eq!(intersection.unwrap(), 1.8284273);
+    }
+
+    #[test]
+    fn return_none_if_there_is_no_intersection_with_a_bounding_volume_circle() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(-1.0, -1.0));
+        let bv = BoundingVolume::Circle {
+            position: vec2(2.0, 2.0),
+            radius: 1.0,
+        };
+        let intersection = ray.intersect_bounding_volume(&bv);
+        assert_eq!(intersection, None);
+    }
+    #[test]
+    fn calculate_the_intersection_with_a_bounding_volume_aabb() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let bv = BoundingVolume::Aabb {
+            min: vec2(1.0, 1.0),
+            max: vec2(2.0, 2.0),
+        };
+        let intersection = ray.intersect_bounding_volume(&bv);
+        assert_eq!(intersection.unwrap(), 1.4142135);
+    }
+
+    #[test]
+    fn return_none_if_there_is_no_intersection_with_a_bounding_volume_aabb() {
+        let ray = Ray2D::new(vec2(-0.1, -0.1), vec2(-1.0, -1.0));
+        let bv = BoundingVolume::Aabb {
+            min: vec2(0.0, 0.0),
+            max: vec2(1.0, 1.0),
+        };
+        let intersection = ray.intersect_bounding_volume(&bv);
+        assert_eq!(intersection, None);
     }
 }

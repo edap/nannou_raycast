@@ -7,4 +7,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# copied from nannou-core Cargo.tom
+#glam = { version = "0.17", default-features = false, features = ["num-traits", "rand"] }
 nannou = "0.18.0"
