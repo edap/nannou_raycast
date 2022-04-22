@@ -325,29 +325,35 @@ mod tests {
         assert_eq!(intersection, None)
     }
 
-    // #[test]
-    // fn calculate_the_intersection_with_a_polyline() {
-    //     let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
-    //     let radius = 150.0;
-    //     let points = (0..=180).map(|i| {
-    //         let radian = deg_to_rad(i as f32);
-    //         let x = radian.sin() * radius;
-    //         let y = radian.cos() * radius;
-    //         vec2(x,y)
-    //     }).collect();
-    //     let intersection = ray.intersect_polyline(&points);
-    //     assert_eq!(
-    //         intersection.unwrap(),
-    //         (1.8284273, vec2(-0.70710677, -0.70710677))
-    //     )
-    // }
+    #[test]
+    fn calculate_the_intersection_with_a_polyline() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(1.0, 1.0));
+        let radius = 150.0;
+        let mut points: Vec<Vec2> = Vec::new();
+        for i in 0..=180 {
+            let radian = deg_to_rad(i as f32);
+            let x = radian.sin() * radius;
+            let y = radian.cos() * radius;
+            points.push(vec2(x, y));
+        }
+        let intersection = ray.intersect_polyline(&points);
+        assert_eq!(intersection.unwrap(), (150.0, vec2(0.70090896, 0.7132508)))
+    }
 
-    // #[test]
-    // fn return_none_if_there_is_no_intersection_with_a_polyline() {
-    //     let ray = Ray2D::new(vec2(0.0, 0.0), vec2(0.0, 1.0));
-    //     let intersection = ray.intersect_circle(&vec2(1.0, 1.0), &0.5);
-    //     assert_eq!(intersection, None)
-    // }
+    #[test]
+    fn return_none_if_there_is_no_intersection_with_a_polyline() {
+        let ray = Ray2D::new(vec2(0.0, 0.0), vec2(-1.0, -1.0));
+        let radius = 150.0;
+        let mut points: Vec<Vec2> = Vec::new();
+        for i in 0..=180 {
+            let radian = deg_to_rad(i as f32);
+            let x = radian.sin() * radius;
+            let y = radian.cos() * radius;
+            points.push(vec2(x, y));
+        }
+        let intersection = ray.intersect_polyline(&points);
+        assert_eq!(intersection, None)
+    }
 
     #[test]
     fn calculate_the_intersection_with_a_bounding_volume_circle() {
