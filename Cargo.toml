@@ -1,12 +1,10 @@
 [package]
 name = "nannou-ray2d"
 authors = ["Davide Prati <lastexxit@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# copied from nannou-core Cargo.tom
-#glam = { version = "0.17", default-features = false, features = ["num-traits", "rand"] }
 nannou = "0.18.0"
