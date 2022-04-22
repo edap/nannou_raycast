@@ -23,8 +23,16 @@ impl Default for Ray2D {
 }
 
 // TODO, all this methods should accept both f32 and f64
+// https://docs.rs/num-traits/latest/num_traits/float/trait.Float.html
 
 impl Ray2D {
+    pub fn new(orig: Vec2, dir: Vec2) -> Self {
+        Self{
+            orig,
+            dir,
+        }
+    }
+
     pub fn reflect(&self, surface_normal: Vec2) -> Vec2 {
         //I - 2.0 * dot(N, I) * N
         // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/reflect.xhtml
@@ -78,6 +86,7 @@ impl Ray2D {
         }
     }
 
+    // actually, removing this method could remove the nannou dependency
     pub fn draw(&self, draw: &Draw, mag: f32, weight: f32, col: Rgb) {
         draw.arrow()
             .color(col)
@@ -207,6 +216,13 @@ impl Ray2D {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn it_takes_parameter_for_initialization() {
+        let r = Ray2D::new(vec2(2.0, 0.0), vec2(0.0, 1.0));
+        assert_eq!(r.dir, vec2(0.0, 1.0));
+        assert_eq!(r.orig, vec2(2.0, 0.0));
+    }
+
     #[test]
     fn it_has_a_default_direction() {
         let r = Ray2D::default();
