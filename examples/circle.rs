@@ -1,5 +1,5 @@
 use nannou::prelude::*;
-use nannou_ray2d::*;
+use nannou_raycast::ray2d::Ray2d;
 
 const IOR_GLASS: f32 = 1.500;
 
@@ -40,7 +40,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         let y = radian.cos() * 1.0;
 
         let dir = vec2(x, y);
-        let ray = Ray2D::new(app.mouse.position(), dir);
+        let ray = Ray2d::new(app.mouse.position(), dir);
         if let Some((dist_to_collision, surface_normal)) =
             ray.intersect_circle(&model.circle_pos, &model.circle_radius)
         {
