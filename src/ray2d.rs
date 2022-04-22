@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-use nannou::prelude::*;
 use crate::bounding_volume;
-
+use nannou::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray2d {
@@ -192,7 +191,10 @@ impl Ray2d {
         }
     }
 
-    pub fn intersect_bounding_volume(&self, volume: &bounding_volume::BoundingVolume) -> Option<f32> {
+    pub fn intersect_bounding_volume(
+        &self,
+        volume: &bounding_volume::BoundingVolume,
+    ) -> Option<f32> {
         match volume {
             bounding_volume::BoundingVolume::Circle { position, radius } => {
                 match self.intersect_circle(position, radius) {
