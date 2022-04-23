@@ -93,7 +93,8 @@ impl Ray2d {
     }
 
     pub fn set_dir_from_angle(&mut self, angle_in_radians: f32) {
-        self.dir = vec2(angle_in_radians.cos(), angle_in_radians.sin())
+        self.dir.x = angle_in_radians.cos();
+        self.dir.y = angle_in_radians.sin();
     }
 
     pub fn intersect_segment(&self, x1: &f32, y1: &f32, x2: &f32, y2: &f32) -> Option<f32> {

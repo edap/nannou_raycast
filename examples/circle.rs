@@ -35,12 +35,10 @@ fn view(app: &App, model: &Model, frame: Frame) {
         .color(STEELBLUE);
 
     for i in (0..360).step_by(6) {
-        let radian = deg_to_rad(i as f32);
-        let x = radian.sin() * 1.0;
-        let y = radian.cos() * 1.0;
+        let mut ray = Ray2d::default();
+        ray.orig = app.mouse.position();
+        ray.set_dir_from_angle(deg_to_rad(i as f32));
 
-        let dir = vec2(x, y);
-        let ray = Ray2d::new(app.mouse.position(), dir);
         if let Some((dist_to_collision, surface_normal)) =
             ray.intersect_circle(&model.circle_pos, &model.circle_radius)
         {
